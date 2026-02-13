@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>For You ❤️</title>
+
+  <!-- cache-bust so XAMPP loads the latest CSS -->
+  <link rel="stylesheet" href="style.css?v=9" />
+</head>
+<body>
+
+  <!-- ENVELOPE OVERLAY -->
+  <div id="envelope-overlay">
+    <button class="envelope-wrapper" type="button" onclick="openLetter()">
+      <div class="envelope">
+        <div class="card-preview">For You ❤️</div>
+      </div>
+      <div class="click-hint">Tap to Open</div>
+    </button>
+  </div>
+
+  <!-- LETTER -->
+  <main id="main-letter">
+    <h1 class="handwritten">Happy Valentine's</h1>
+
+    <p id="typed-line" class="typed" data-text="Dear Ilong,"></p>
+
+    <p>We’ve hurt each other, and I know we’re both in different phases of our lives now. 
+      Things have changed, and maybe we’re not meant to walk the same path anymore.
+      But one thing that never changed is how much I still love you.
+      Maybe one day our paths will find their way back to each other, because it’s never felt the same without you.
+      Even if we can’t be together right now, seeing you happy makes me happy too.
+      I’ll always be rooting for you, no matter where life takes you.</p>
+
+    <!-- POLAROID STACK CAROUSEL -->
+    <section class="carousel-wrap" aria-label="Photo memories">
+      <div class="carousel" id="carousel">
+        <article class="polaroid-card">
+          <img src="1.png" alt="Memory 1" loading="lazy">
+          <div class="polaroid-caption">I</div>
+        </article>
+
+        <article class="polaroid-card">
+          <img src="2.png" alt="Memory 2" loading="lazy">
+          <div class="polaroid-caption">Love</div>
+        </article>
+
+        <article class="polaroid-card">
+          <img src="3.png" alt="Memory 3" loading="lazy">
+          <div class="polaroid-caption">You</div>
+        </article>
+
+        <article class="polaroid-card">
+          <img src="4.png" alt="Memory 4" loading="lazy">
+          <div class="polaroid-caption">Always</div>
+        </article>
+
+        <article class="polaroid-card">
+          <img src="5.png" alt="Memory 5" loading="lazy">
+          <div class="polaroid-caption">Babi</div>
+        </article>
+      </div>
+
+      <p class="carousel-note">Tap the photo to go next ✨</p>
+    </section>
+
+    <p>You are my favorite notification. My favorite person. My favorite everything.</p>
+
+    <h1 class="handwritten end-title" id="endTitle">I Love You</h1>
+    <p>Please keep the streak alive. 🔥❤️</p>
+  </main>
+
+  <!-- MUSIC -->
+  <audio id="bgMusic" loop preload="auto">
+    <source src="https://www.bensound.com/bensound-music/bensound-romantic.mp3" type="audio/mpeg">
+  </audio>
+
+  <script>
+    // ---- GLOBALS ----
+    let floatyTimer = null;
+    let carouselTimer = null;
+
+    // ---- OPEN ----
+    function openLetter() {
+      const overlay = document.getElementById('envelope-overlay');
+      const main = document.getElementById('main-letter');
+      const envelope = document.querySelector('.envelope');
+      const music = document.getElementById('bgMusic');
+
+      if (envelope.classList.contains('open')) return;
+      envelope.classList.add('open');
+
+      setTimeout(() => {
+        overlay.style.opacity = '0';
+
+        setTimeout(() => {
+          overlay.style.display = 'none';
+          main.style.display = 'block';
+          requestAnimationFrame(() => { main.style.opacity = '1'; });
+
+          fadeInMusic(music);
+          typeLine();
+          startFloaties();
+          startCarousel();
+        }, 900);
+
+      }, 900);
+    }
+
+    // ---- MUSIC ----
+    function fadeInMusic(music) {
+      try {
+        music.volume = 0;
+        const p = music.play();
+        if (p && p.catch) p.catch(() => {});
+        let v = 0;
+        const t = setInterval(() => {
+          v += 0.03;
+          music.volume = Math.min(1, v);
+          if (v >= 1) clearInterval(t);
+        }, 120);
+      } catch (e) {}
+    }
+
+    // ---- TYPING ----
+    function typeLine() {
+      const el = document.getElementById('typed-line');
+      const text = el.getAttribute('data-text') || 'Dear Love,';
+      el.textContent = '';
+      let i = 0;
+
+      const t = setInterval(() => {
+        el.textContent += text[i] || '';
+        i++;
+        if (i >= text.length) clearInterval(t);
+      }, 60);
+    }
+
+    // ---- FLOATIES (❤️ + 🥭) ----
+    function startFloaties() {
+      if (floatyTimer) clearInterval(floatyTimer);
+
+      floatyTimer = setInterval(() => {
+        const el = document.createElement('div');
+        el.className = 'floaty';
+
+        el.textContent = (Math.random() < 0.18) ? '🥭' : '❤️';
+
+        const x = 5 + Math.random() * 90;
+        el.style.setProperty('--x', x + 'vw');
+
+        el.style.fontSize = (16 + Math.random() * 18) + 'px';
+        el.style.animationDuration = (3.8 + Math.random() * 1.8) + 's';
+
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 7000);
+      }, 320);
+    }
+
+    // ---- CAROUSEL (AUTO + TAP NEXT) ----
+    function startCarousel() {
+      const cards = Array.from(document.querySelectorAll('.polaroid-card'));
+      const carousel = document.getElementById('carousel');
+      if (!cards.length || !carousel) return;
+
+      if (carouselTimer) clearInterval(carouselTimer);
+
+      let active = 0;
+      let pausedUntil = 0;
+
+      function render() {
+        const n = cards.length;
+
+        for (let i = 0; i < n; i++) {
+          const card = cards[i];
+          const offset = (i - active + n) % n;
+
+          const x = offset * 12;
+          const y = offset * 10;
+          const rot = (offset % 2 === 0 ? -1 : 1) * (2 + offset * 0.6);
+
+          card.style.zIndex = String(100 - offset);
+          card.style.opacity = (offset > 3) ? '0' : '1';
+
+          card.style.transform =
+            `translate(calc(-50% + ${x}px), ${y}px) rotate(${rot}deg)`;
+        }
+      }
+
+      function next() {
+        active = (active + 1) % cards.length;
+        render();
+      }
+
+      render();
+
+      carouselTimer = setInterval(() => {
+        if (Date.now() < pausedUntil) return;
+        next();
+      }, 4000);
+
+      // prevent double listeners if refreshed/opened again
+      carousel.onclick = null;
+
+      carousel.addEventListener('click', () => {
+        pausedUntil = Date.now() + 5000;
+        next();
+      }, { passive: true });
+
+      carousel.addEventListener('touchstart', () => {
+        pausedUntil = Date.now() + 5000;
+        next();
+      }, { passive: true });
+    }
+  </script>
+
+</body>
+</html>
